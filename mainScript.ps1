@@ -18,9 +18,9 @@ $folderName = @{
 
 #ファイル名からPathを作成する関数
 function createPath($folderList){
-    $folderPathList = @()
+    $folderPathList = @{}
     foreach($folderName in $folderList.Values){
-    $folderPathList += Join-Path .\log  $folderName
+    $folderPathList[$folderName] += Join-Path .\log  $folderName
     }
     return $folderPathList
 }
@@ -86,6 +86,7 @@ function logFile($fileName,$logString){
     Write-Output $Log | Out-File -FilePath $logpath -Encoding Default -append
 }
 
+<#
 #一番古いファイルを削除(90世代)
 function deleteOldFile($folderPathList){
     foreach($foloderPath in $folderPathList){
@@ -95,9 +96,27 @@ function deleteOldFile($folderPathList){
         foreach{Remove-Item $_.FullName}
     }
 }
+#>
+
+#新しいPingLogを取得
+function Find-LatestPingLog($folderPathList){
+    $result = @{}
+    $pingLog = (Get-ChildItem $folderPathList["ping"] | Sort-Object LastWriteTime -Descending)[0].FullName
+    $textlists = Get-Content $pingLog | Select-Object -Last 3 |
+    ConvertFrom-Csv -Header @('date', 'ip', 'tf')
+    foreach($textlist in $textlists){
+        $result[$textlist.ip] += $textlist.tf
+    }
+    Write-Host $result["172.16.151.56"]
+}
+
 
 #logフォルダの作成
 $folderPathList = createPath $folderName
+Find-LatestPingLog $folderPathList
+
+
+<#
 confirm_directory $folderPathList
 logfile $foldername["info"] "<START>"
 logfile $foldername["error"] "<START>"
@@ -107,3 +126,10 @@ deleteOldFile $folderPathList
 logfile $foldername["info"] "<END>"
 logfile $foldername["error"] "<END>"
 logfile $foldername["device"] "<END>"
+#>
+
+
+
+
+
+
