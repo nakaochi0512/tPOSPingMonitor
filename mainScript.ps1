@@ -13,6 +13,7 @@ $folderName = @{
     info = "info"
     error = "error"
     device = "device"
+    ping = "ping"
 }
 
 #ファイル名からPathを作成する関数
@@ -46,6 +47,7 @@ function netWorkCheck(){
     foreach($address in $addressList) {
         $pingResult = Test-Connection $address -Count 1 -Quiet
 		logfile $foldername["info"] ($folderName["info"],$address,$pingResult)
+        logfile $foldername["ping"] ($folderName["ping"],$address,$pingResult)
         if(!$pingResult){
             $getNetAdapterList =  Get-NetAdapter
                 foreach($ipAddress in $ipAddressList){
