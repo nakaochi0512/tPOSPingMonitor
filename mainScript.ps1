@@ -126,6 +126,7 @@ function Check-Reboot($result){
                     break
                 }elseif($i -eq $rebootLimit -1){
                     logfile $foldername["error"] "疎通NG->Reboot",$address
+                    shutdown /s /t 60
                 }
                     logfile $foldername["error"] "疎通NG",$address
             }
