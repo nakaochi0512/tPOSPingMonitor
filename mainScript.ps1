@@ -2,11 +2,16 @@
 $path = Split-Path -Parent $MyInvocation.MyCommand.Path
 Set-Location $path
 
+#再起動実施リミット
+$rebootLimit = 12
+
 #通信するIPアドレス
 $addressList = @(
     "172.16.152.55",
     "172.16.151.56"
     )
+
+$rebootLimit2 = $rebootLimit * $addressList.Count
 
 #保存するフォルダ名
 $folderName = @{
@@ -32,7 +37,6 @@ function createPath($folderList){
             }else{
                New-Item $pathList[$key] -ItemType Directory
            }
-             #>
         }
       
 }
@@ -104,29 +108,49 @@ function deleteOldFile($folderPathList){
 function Find-LatestPingLog($folderPathList){
     $result = @{}
     $pingLog = (Get-ChildItem $folderPathList["ping"] | Sort-Object LastWriteTime -Descending)[0].FullName
-    $textlists = Get-Content $pingLog | Select-Object -Last 3 |
+    $textlists = Get-Content $pingLog | Select-Object -Last $rebootLimit2 |
     ConvertFrom-Csv -Header @('date', 'ip', 'tf')
-    foreach($textlist in $textlists){
-        $result[$textlist.ip] += $textlist.tf
+    foreach($text in $textlists){
+        $result[$text.ip] += @($text.tf); 
     }
-    Write-Host $result["172.16.151.56"]
+    return $result
+}
+
+#再起動確認関数
+function Check-Reboot($result){
+    foreach($address in $addressList){
+        Write-Output $result[$address].Count
+        Write-Output $rebootLimit
+        if($result[$address].Count -lt $rebootLimit){
+            for( $i = 0; $i -ge $rebootLimit; $i++ ){
+                if($result[$address][$i] -eq "True"){
+                    logfile $foldername["info"] "疎通OK",$address
+                    break
+                }elseif($i -eq $rebootLimit -1){
+                    logfile $foldername["error"] "疎通NG->Reboot",$address
+                }
+                    logfile $foldername["error"] "疎通NG",$address
+            }
+        }
+    }
 }
 
 #logフォルダの作成
 $folderPathList = createPath $folderName
 confirm_directory $folderPathList
 
-<#
 logfile $foldername["info"] "<START>"
 logfile $foldername["error"] "<START>"
 logfile $foldername["device"] "<START>"
 netWorkCheck
 #deleteOldFile $folderPathList
+$result = Find-LatestPingLog $folderPathList
+Check-Reboot $result
 logfile $foldername["info"] "<END>"
 logfile $foldername["error"] "<END>"
 logfile $foldername["device"] "<END>"
-Find-LatestPingLog $folderPathList
-#>
+
+
 
 
 
