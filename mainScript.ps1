@@ -27,12 +27,14 @@ function createPath($folderList){
 
 <#$foldernameで指定したディレクトリに特定のディレクトリがあるかを確認。ディレクトリがない場合は作成する。#>
  function confirm_directory($pathList){
-    foreach($path in $pathList){
-       if(Test-Path $path){
+    foreach($key in $pathList.keys){
+        if(Test-Path $pathList[$key]){
             }else{
-               New-Item $path -ItemType Directory
+               New-Item $pathList[$key] -ItemType Directory
            }
+             #>
         }
+      
 }
 
 #ネットワークチェック関数
@@ -110,24 +112,21 @@ function Find-LatestPingLog($folderPathList){
     Write-Host $result["172.16.151.56"]
 }
 
-
 #logフォルダの作成
 $folderPathList = createPath $folderName
-Find-LatestPingLog $folderPathList
-
+confirm_directory $folderPathList
 
 <#
-confirm_directory $folderPathList
 logfile $foldername["info"] "<START>"
 logfile $foldername["error"] "<START>"
 logfile $foldername["device"] "<START>"
 netWorkCheck
-deleteOldFile $folderPathList
+#deleteOldFile $folderPathList
 logfile $foldername["info"] "<END>"
 logfile $foldername["error"] "<END>"
 logfile $foldername["device"] "<END>"
+Find-LatestPingLog $folderPathList
 #>
-
 
 
 
