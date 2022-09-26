@@ -1,4 +1,5 @@
-﻿# このps1ファイルのフルパスのうち親ディレクトリまでのフルパスを取得して、カレントディレクトリを移動する
+﻿
+# このps1ファイルのフルパスのうち親ディレクトリまでのフルパスを取得して、カレントディレクトリを移動する
 $path = Split-Path -Parent $MyInvocation.MyCommand.Path
 Set-Location $path
 
@@ -7,9 +8,9 @@ $rebootLimit = 12
 
 #通信するIPアドレス
 $addressList = @(
+    "192.168.11.38",
     "192.168.11.10",
-    "192.168.11.237",
-    "192.168.11.38"
+    "11.254.123.10"
     )
 
 $rebootLimit2 = $rebootLimit * $addressList.Count
@@ -118,14 +119,28 @@ function Find-LatestPingLog($folderPathList){
 }
 
 #再起動確認関数
-function Check-Reboot($result){
+function Check-Reboot($result,$folderPathList){
+    Write-Output $folderPathList["ping"]
+    $pingOldPath = Join-Path $folderPathList["ping"] old |
+    Convert-Path
+    $pingLog = Join-Path $folderPathList["ping"] *.log |
+    Convert-Path
+    Write-Output $pingLog
+    logfile $foldername["error"] $pingOldPath
     foreach($address in $addressList){
-        if($result[$address].Count -lt $rebootLimit){
-            for( $i = 0; $i -ge $rebootLimit; $i++ ){
+        if($result[$address].Count -ge $rebootLimit){
+            for( $i = 0; $i -lt $rebootLimit; $i++ ){
                 if($result[$address][$i] -eq "True"){
                     logfile $foldername["info"] "疎通OK",$address
                     break
                 }elseif($i -eq $rebootLimit -1){
+                    if(Test-Path $pingOldPath){
+                     }else{
+                            New-Item $pingOldPath -ItemType Directory
+                     }
+                     Move-Item $pingLog $pingOldPath -Force
+                     logfile $foldername["error"] $folderPathList["ping"]
+                     logfile $foldername["error"] $pingOldPath
                     logfile $foldername["error"] "疎通NG->Reboot",$address
                     shutdown /s /t 60
                 }
@@ -145,7 +160,7 @@ logfile $foldername["device"] "<START>"
 netWorkCheck
 deleteOldFile $folderPathList
 $result = Find-LatestPingLog $folderPathList
-Check-Reboot $result
+Check-Reboot $result $folderPathList
 logfile $foldername["info"] "<END>"
 logfile $foldername["error"] "<END>"
 logfile $foldername["device"] "<END>"
