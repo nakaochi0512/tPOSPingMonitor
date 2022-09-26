@@ -92,17 +92,17 @@ function logFile($fileName,$logString){
     Write-Output $Log | Out-File -FilePath $logpath -Encoding Default -append
 }
 
-<#
 #一番古いファイルを削除(90世代)
 function deleteOldFile($folderPathList){
-    foreach($foloderPath in $folderPathList){
-        Get-ChildItem $folderPath       |
-        Sort-Object LastWriteTime -Descending   |
-        Select-Object -Skip 90                  |
-        foreach{Remove-Item $_.FullName}
+    foreach($key in $folderPathList.Keys){
+        Get-ChildItem $folderPathList[$key] -Recurse |
+        Sort-Object LastWriteTime -Descending|
+        Select-Object -Skip 90|
+        foreach{
+            Remove-Item -Path  $_.FullName -Force
+        }
     }
 }
-#>
 
 #新しいPingLogを取得
 function Find-LatestPingLog($folderPathList){
@@ -119,8 +119,6 @@ function Find-LatestPingLog($folderPathList){
 #再起動確認関数
 function Check-Reboot($result){
     foreach($address in $addressList){
-        Write-Output $result[$address].Count
-        Write-Output $rebootLimit
         if($result[$address].Count -lt $rebootLimit){
             for( $i = 0; $i -ge $rebootLimit; $i++ ){
                 if($result[$address][$i] -eq "True"){
@@ -143,7 +141,7 @@ logfile $foldername["info"] "<START>"
 logfile $foldername["error"] "<START>"
 logfile $foldername["device"] "<START>"
 netWorkCheck
-#deleteOldFile $folderPathList
+deleteOldFile $folderPathList
 $result = Find-LatestPingLog $folderPathList
 Check-Reboot $result
 logfile $foldername["info"] "<END>"
