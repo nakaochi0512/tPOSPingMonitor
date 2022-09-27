@@ -120,12 +120,8 @@ function Find-LatestPingLog($folderPathList){
 
 #再起動確認関数
 function Check-Reboot($result,$folderPathList){
-    Write-Output $folderPathList["ping"]
-    $pingOldPath = Join-Path $folderPathList["ping"] old |
-    Convert-Path
-    $pingLog = Join-Path $folderPathList["ping"] *.log |
-    Convert-Path
-    Write-Output $pingLog
+    $pingOldPath = Join-Path $folderPathList["ping"] old
+    $pingLog = Join-Path $folderPathList["ping"] *.log 
     logfile $foldername["error"] $pingOldPath
     foreach($address in $addressList){
         if($result[$address].Count -ge $rebootLimit){
@@ -138,11 +134,11 @@ function Check-Reboot($result,$folderPathList){
                      }else{
                             New-Item $pingOldPath -ItemType Directory
                      }
-                     Move-Item $pingLog $pingOldPath -Force
+                     Move-Item $pingLog $pingOldPath -Force | Out-Null
                      logfile $foldername["error"] $folderPathList["ping"]
                      logfile $foldername["error"] $pingOldPath
                     logfile $foldername["error"] "疎通NG->Reboot",$address
-                    shutdown /s /t 60
+                    shutdown /r /t 60  
                 }
                     logfile $foldername["error"] "疎通NG",$address
             }
