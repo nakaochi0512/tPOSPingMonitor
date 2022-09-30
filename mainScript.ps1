@@ -8,9 +8,8 @@ $rebootLimit = 12
 
 #通信するIPアドレス
 $addressList = @(
-    "192.168.11.38",
-    "192.168.11.10",
-    "11.254.123.10"
+    "172.16.152.55",
+    "172.16.151.56"
     )
 
 $rebootLimit2 = $rebootLimit * $addressList.Count
