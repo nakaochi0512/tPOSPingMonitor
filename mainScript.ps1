@@ -137,7 +137,7 @@ function Check-Reboot($result,$folderPathList){
                      logfile $foldername["error"] $folderPathList["ping"]
                      logfile $foldername["error"] $pingOldPath
                     logfile $foldername["error"] "疎通NG->Reboot",$address
-                    shutdown /r /t 60  
+                    shutdown /r /f /t 60
                 }
                     logfile $foldername["error"] "疎通NG",$address
             }
